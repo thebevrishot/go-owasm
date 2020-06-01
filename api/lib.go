@@ -22,29 +22,29 @@ package api
 import "C"
 import "unsafe"
 
-func Compile(code []byte) []byte {
+func Compile(code []byte) ([]byte, int32) {
 	inputSpan := copySpan(code)
 	defer freeSpan(inputSpan)
 	outputSpan := newSpan(1 * 1024 * 1024)
 	defer freeSpan(outputSpan)
-	C.do_compile(inputSpan, &outputSpan)
-	return readSpan(outputSpan)
+	res := int32(C.do_compile(inputSpan, &outputSpan))
+	return readSpan(outputSpan), res
 }
 
-func Prepare(code []byte, env EnvInterface) {
-	run(code, true, env)
+func Prepare(code []byte, env EnvInterface) int32 {
+	return run(code, true, env)
 }
 
-func Execute(code []byte, env EnvInterface) {
-	run(code, false, env)
+func Execute(code []byte, env EnvInterface) int32 {
+	return run(code, false, env)
 }
 
-func run(code []byte, isPrepare bool, env EnvInterface) {
+func run(code []byte, isPrepare bool, env EnvInterface) int32 {
 	codeSpan := copySpan(code)
 	defer freeSpan(codeSpan)
 	envIntl := createEnvIntl(env)
 	defer destroyEnvIntl(envIntl)
-	C.do_run(codeSpan, C.bool(isPrepare), C.Env{
+	return int32(C.do_run(codeSpan, C.bool(isPrepare), C.Env{
 		env: (*C.env_t)(unsafe.Pointer(envIntl)),
 		dis: C.EnvDispatcher{
 			get_calldata:             C.get_calldata_fn(C.cGetCalldata_cgo),
@@ -56,5 +56,5 @@ func run(code []byte, isPrepare bool, env EnvInterface) {
 			get_external_data_status: C.get_external_data_status_fn(C.cGetExternalDataStatus_cgo),
 			get_external_data:        C.get_external_data_fn(C.cGetExternalData_cgo),
 		},
-	})
+	}))
 }

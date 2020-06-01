@@ -44,6 +44,6 @@ func (e *Env) GetExternalData(eid int64, vid int64) []byte {
 func main() {
 	fmt.Println("Hello, World!")
 	code, _ := ioutil.ReadFile("./wasm/fun3.wasm")
-	api.Prepare(code, &Env{})
+	fmt.Println(api.Prepare(code, &Env{}))
 	fmt.Println("Hello, World!")
 }
